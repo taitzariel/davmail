@@ -88,7 +88,7 @@ public final class ExchangeSessionFactory {
      * @throws IOException on error
      */
     public static ExchangeSession getInstance(String userName, String password) throws IOException {
-        String baseUrl = Settings.getProperty("davmail.url");
+        String baseUrl = getExchangeUri();
         if (Settings.getBooleanProperty("davmail.server")) {
             return getInstance(baseUrl, userName, password);
         } else {
@@ -179,7 +179,7 @@ public final class ExchangeSessionFactory {
                     authenticator.setUsername(poolKey.userName);
                     authenticator.setPassword(poolKey.password);
                     authenticator.authenticate();
-                    HttpClient httpClient = DavGatewayHttpClientFacade.getInstance(authenticator.getExchangeUri().toString());
+                    HttpClient httpClient = DavGatewayHttpClientFacade.getInstance(getExchangeUri().toString());
                     DavGatewayHttpClientFacade.createMultiThreadedHttpConnectionManager(httpClient);
                     session = new EwsExchangeSession(httpClient, authenticator.getToken(), poolKey.userName);
 
@@ -280,7 +280,7 @@ public final class ExchangeSessionFactory {
             if (session.isExpired()) {
                 ExchangeSession.LOGGER.debug("Session " + session + " expired, trying to open a new one");
                 session = null;
-                String baseUrl = Settings.getProperty("davmail.url");
+                String baseUrl = getExchangeUri();
                 PoolKey poolKey = new PoolKey(baseUrl, userName, password);
                 // expired session, remove from cache
                 synchronized (LOCK) {
@@ -298,13 +298,17 @@ public final class ExchangeSessionFactory {
         return session;
     }
 
+    private static String getExchangeUri() {
+        return Settings.getProperty("davmail.url");
+    }
+
     /**
      * Send a request to Exchange server to check current settings.
      *
      * @throws IOException if unable to access Exchange server
      */
     public static void checkConfig() throws IOException {
-        String url = Settings.getProperty("davmail.url");
+        String url = getExchangeUri();
         if (url == null || (!url.startsWith("http://") && !url.startsWith("https://"))) {
             throw new DavMailException("LOG_INVALID_URL", url);
         }
