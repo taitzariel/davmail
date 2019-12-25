@@ -1,6 +1,7 @@
 *.log
 dist/*
 target/*
+.idea
 *.iml
 *.iws
 *.ipr
